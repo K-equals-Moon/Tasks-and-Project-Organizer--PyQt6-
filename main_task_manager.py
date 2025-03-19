@@ -21,6 +21,11 @@ class MainWindow(QMainWindow):
         self.setUpMainWindow()
         self.show()
 
+    def input_collectors(self):
+
+        self.task_details_input_collector = TaskInputWindow(self)
+        self.task_group_details_input_collector = TaskGroupNameInput(self)
+
     def createConnection(self):
         """ Creates database """
         self.database = QSqlDatabase.addDatabase("QSQLITE")
@@ -54,7 +59,7 @@ class MainWindow(QMainWindow):
             project_query.exec("""CREATE TABLE projects(
                        project_id INTEGER PRIMARY KEY UNIQUE NOT NULL,
                        project_name VARCHAR(120) NOT NULL,
-                       project_due_date DATE,
+                       project_due_date DATE DEFAULT 30/12/2030,
                        project_progress INTEGER DEFAULT 0,
                        project_status INTEGER DEFAULT 0
 
@@ -137,6 +142,9 @@ class MainWindow(QMainWindow):
         self.projects_count +=1
         self.new_proj = ProjectPageMain()
         self.ui.main_project_stackedWidget.addWidget(self.new_proj)
+        # signals and slots
+        self.new_proj.main.add_task_group.clicked.connect(self.checker)
+
         self.new_proj.project_name.setText(self.project_name_collector.project_name_input.text())
         self.new_proj.project_due.setText(self.project_name_collector.project_due_input.date(
 
@@ -148,21 +156,18 @@ class MainWindow(QMainWindow):
         self.ui.project_buttoncb.addItem(proj_name)
         # saving the project into the database
         query = QSqlQuery()
-        query.prepare("INSERT INTO projects(project_id,project_name,project_due_date) VALUES(?,?,"
-                      "?)")
+        query.prepare("INSERT INTO projects(project_id,project_name,project_due_date) VALUES(?,?,?)")
         date = self.new_proj.project_due.text()
         query.addBindValue(self.new_proj.project_id)
         query.addBindValue(proj_name)
         query.addBindValue(date)
         query.exec()
 
-
-        # switching the page to the newly opened project
         self.project_name_collector.close()
 
-        # saving task groups created into database
-        self.new_proj.main.add_task_group.clicked.connect(self.create_new_group)
 
+    def checker(self,id):
+        print(" group created")
 
     def load_existing_projects(self):
         query = QSqlQuery()

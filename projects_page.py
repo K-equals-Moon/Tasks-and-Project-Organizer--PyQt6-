@@ -7,6 +7,7 @@ class TaskGroupNameInput(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         self.setFixedSize(360, 220)
+        self.task_group_input = QLineEdit()
         self.setWindowTitle("Add New Task")
         self.setUpWindow()
 
@@ -17,7 +18,7 @@ class TaskGroupNameInput(QDialog):
 
         # widgets within and their attributes
         top_label = QLabel("NEW TASK GROUP")
-        self.task_group_input = QLineEdit()
+
         self.save_group_name_button = QPushButton("Save")
         self.cancel_group_button = QPushButton("Cancel")
         top_label.setFont(QFont("Arial", 17))
@@ -98,7 +99,6 @@ class ProjectPageTasks(QWidget):
     def __init__(self):
         super().__init__()
         self.task_groups_list = []
-        self.group_name_input = TaskGroupNameInput(self)
         self.add_task_group = QPushButton()
         self.setUpGroups()
     def setUpGroups(self):
@@ -107,6 +107,9 @@ class ProjectPageTasks(QWidget):
         self.add_task_group.setIcon(QIcon("ICONS/add.png"))
         self.add_task_group.setIconSize(QSize(20, 20))
         self.add_task_group.setStyleSheet("background-color:#E8B4BC")
+
+        # signals and slots
+        self.add_task_group.clicked.connect(self.collect_input)
 
         # set up layout
         top_lay = QHBoxLayout()
@@ -120,12 +123,19 @@ class ProjectPageTasks(QWidget):
         self.main_widget_lay.addWidget(self.add_task_group)
         self.project_lay.addLayout(self.main_widget_lay)
         self.setLayout(self.project_lay)
-    def add_group(self,group_name):
+
+    def collect_input(self):
+        self.group_name_input = TaskGroupNameInput(self)
+        self.group_name_input.show()
+        self.group_name_input.save_group_name_button.clicked.connect(self.add_group)
+    def add_group(self):
+        self.group_name_input.close()
         new_group = DragWidget()
-        new_group.task_group_label.setText(group_name)
         self.main_widget_lay.addWidget(new_group)
         self.main_widget_lay.addSpacing(30)
-        self.group_name_input.task_group_input.clear()
+        group_name = self.group_name_input.task_group_input.text()
+        new_group.task_group_label.setText(group_name)
+
     def load_group(self,group_name,task_list):
         old_group = DragWidget()
         old_group.task_group_label.setText(group_name)
@@ -161,6 +171,9 @@ class ProjectPageMain(QWidget):
         topper_lay.addSpacing(100)
 
         topper_lay.addWidget(self.edit_button)
+
+        # signals and slots
+
 
         self.main_lay.addLayout(topper_lay)
         # setting up the scrolling

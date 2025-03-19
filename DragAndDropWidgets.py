@@ -17,8 +17,6 @@ class DragTargetIndicator(QLabel):
         self.setGraphicsEffect(self.opacity_effect)
         self.setStyleSheet("background-color:#FEF9FF;border-radius:5px;")
 class TaskInputWindow(QDialog):
-
-
     def __init__(self,parent):
         super().__init__(parent)
         self.cancel_button = QPushButton("Cancel")
