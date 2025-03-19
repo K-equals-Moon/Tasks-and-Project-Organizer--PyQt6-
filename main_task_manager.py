@@ -163,20 +163,7 @@ class MainWindow(QMainWindow):
         # saving task groups created into database
         self.new_proj.main.add_task_group.clicked.connect(self.create_new_group)
 
-    def create_new_group(self):
-        self.group_data_collector = TaskGroupNameInput(self)
-        self.group_data_collector.show()
-        self.group_data_collector.save_group_name_button.clicked.connect(self.save_group_data)
-    def save_group_data(self):
-        group_name = self.group_data_collector.task_group_input.text()
-        self.new_proj.main.add_task_group(group_name)
-        proj_id = self.new_proj.project_id
-        group_query = QSqlQuery()
-        group_query.prepare("INSERT INTO task_groups (project_id,group_name) VALUES (?,?)")
-        print(f"the group data  id {proj_id} group name{group_name}")
-        group_query.addBindValue(proj_id)
-        group_query.addBindValue(group_name)
-        group_query.exec()
+
     def load_existing_projects(self):
         query = QSqlQuery()
         query.exec("SELECT project_name,project_due_date FROM projects")
