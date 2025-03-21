@@ -10,7 +10,7 @@ import datetime
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.projects_count = 0
+        self.projects_list = []
         self.createConnection()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -19,6 +19,7 @@ class MainWindow(QMainWindow):
     def initializeUI(self):
         self.createModel()
         self.setUpMainWindow()
+        self.group_count = 0
         self.show()
 
     def input_collectors(self):
@@ -59,7 +60,7 @@ class MainWindow(QMainWindow):
             project_query.exec("""CREATE TABLE projects(
                        project_id INTEGER PRIMARY KEY UNIQUE NOT NULL,
                        project_name VARCHAR(120) NOT NULL,
-                       project_due_date DATE DEFAULT 30/12/2030,
+                       project_due_date DATE,
                        project_progress INTEGER DEFAULT 0,
                        project_status INTEGER DEFAULT 0
 
@@ -120,6 +121,11 @@ class MainWindow(QMainWindow):
         self.ui.project_buttoncb.setMinimumSize(100,30)
         self.ui.project_buttoncb.activated.connect(self.switch_project_page)
 
+        c_query = QSqlQuery()
+        c_query.exec("SELECT COUNT (project_id) FROM projects")
+        while (c_query.next()):
+            self.projs_in_db = c_query.value(0)
+
     def setUpProjectsPage(self):
         main_page_widget = QWidget()
         add_project_button = QPushButton()
@@ -139,31 +145,35 @@ class MainWindow(QMainWindow):
         self.project_name_collector.show()
         self.project_name_collector.save_project_name_button.clicked.connect(self.create_new_project_page)
     def create_new_project_page(self):
-        self.projects_count +=1
-        self.new_proj = ProjectPageMain()
-        self.ui.main_project_stackedWidget.addWidget(self.new_proj)
-        # signals and slots
-        self.new_proj.main.add_task_group.clicked.connect(self.checker)
 
-        self.new_proj.project_name.setText(self.project_name_collector.project_name_input.text())
-        self.new_proj.project_due.setText(self.project_name_collector.project_due_input.date(
 
-        ).toString())
-        self.new_proj.project_id = self.projects_count
-        self.new_proj.delete_act.triggered.connect(self.delete_project_page)
+        new_proj = ProjectPageMain()
+        proj_name = self.project_name_collector.project_name_input.text()
+        proj_date = self.project_name_collector.project_due_input.date()
+        proj_id = self.projs_in_db + 1
 
-        proj_name = self.new_proj.project_name.text()
+        self.ui.main_project_stackedWidget.addWidget(new_proj)
+
+
+        new_proj.project_name.setText(proj_name)
+        new_proj.project_due.setText(proj_date.toString())
+        new_proj.project_id = proj_id
+        new_proj.delete_act.triggered.connect(self.delete_project_page)
+
         self.ui.project_buttoncb.addItem(proj_name)
+
         # saving the project into the database
         query = QSqlQuery()
-        query.prepare("INSERT INTO projects(project_id,project_name,project_due_date) VALUES(?,?,?)")
-        date = self.new_proj.project_due.text()
-        query.addBindValue(self.new_proj.project_id)
+        query.prepare("INSERT INTO projects(project_id,project_name,project_due_date) VALUES(?,?,"
+                      "?)")
+        query.addBindValue(proj_id)
         query.addBindValue(proj_name)
-        query.addBindValue(date)
+        query.addBindValue(proj_date)
         query.exec()
 
+
         self.project_name_collector.close()
+        self.projects_list.append(new_proj)
 
 
     def checker(self,id):
@@ -171,18 +181,20 @@ class MainWindow(QMainWindow):
 
     def load_existing_projects(self):
         query = QSqlQuery()
-        query.exec("SELECT project_name,project_due_date FROM projects")
+        query.exec("SELECT project_id,project_name,project_due_date FROM projects")
         while query.next():
-
-            name = query.value(0)
-            date = query.value(1)
+            id = query.value(0)
+            name = query.value(1)
+            date = query.value(2)
             # creating the project page objects
             old_proj = ProjectPageMain()
             self.ui.main_project_stackedWidget.addWidget(old_proj)
             old_proj.project_name.setText(name)
             old_proj.project_due.setText(date)
+            old_proj.project_id = id
             old_proj.delete_act.triggered.connect(self.delete_project_page)
             self.ui.project_buttoncb.addItem(name)
+            self.projects_list.append(old_proj)
     def switch_project_page(self,index):
         self.changePage(1)
         self.ui.main_project_stackedWidget.setCurrentIndex(index)
@@ -196,6 +208,29 @@ class MainWindow(QMainWindow):
 
 
     def closeEvent(self, event):
+        p_query = QSqlQuery()
+        g_query = QSqlQuery()
+        t_query = QSqlQuery()
+
+        p_query.prepare("INSERT INTO projects(project_name,project_due_date) VALUES(?,?)")
+        g_query.prepare("INSERT INTO task_groups(project_id,group_name) VALUES(?,?)")
+        t_query.prepare("INSERT INTO tasks(group_id,task_name,task_date,task_time) VALUES(?,?,?,?)")
+        for project in self.projects_list:# project is a projectPageMain obj
+            print(f"current project {project.project_id} ")
+            proj_id = project.project_id
+            for group in project.main.task_groups_list:# group is dragWidget obj
+                self.group_count+=1
+                g_query.addBindValue(proj_id)
+                g_query.addBindValue(group.task_group_label.text())
+                g_query.exec()
+                for task in group.task_list:# task is dragItem obj
+                    t_query.addBindValue(self.group_count)
+                    t_query.addBindValue(task.task_label.text())
+                    t_query.addBindValue(task.date_label.text())
+                    t_query.addBindValue(task.time_label.text())
+                    t_query.exec()
+
+
         event.accept()
 
 

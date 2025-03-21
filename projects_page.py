@@ -50,6 +50,7 @@ class ProjectNameInput(QDialog):
         self.save_project_name_button = QPushButton("Save")
         self.project_name_input = QLineEdit()
         self.project_due_input = QDateEdit()
+
         self.setWindowTitle("Set Project Name")
         self.setUpWindow()
 
@@ -135,6 +136,7 @@ class ProjectPageTasks(QWidget):
         self.main_widget_lay.addSpacing(30)
         group_name = self.group_name_input.task_group_input.text()
         new_group.task_group_label.setText(group_name)
+        self.task_groups_list.append(new_group)
 
     def load_group(self,group_name,task_list):
         old_group = DragWidget()

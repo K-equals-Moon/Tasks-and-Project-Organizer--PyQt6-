@@ -197,7 +197,6 @@ class DragWidget(QWidget):
     def __init__(self,*args,orientation=Qt.Orientation.Vertical,**kwargs):
         super().__init__()
         self.task_list = []
-        self.input_collector = TaskInputWindow(self)
         self.task_group_label = QLabel("TASK GROUP")
         self.setAcceptDrops(True)
         self.orientation = orientation
@@ -318,6 +317,7 @@ class DragWidget(QWidget):
                 data.append(w.data)
         return data
     def create_new_item(self):
+        self.input_collector = TaskInputWindow(self)
         self.input_collector.show()
         self.input_collector.save_button.clicked.connect(self.save_task)
     def save_task(self):
