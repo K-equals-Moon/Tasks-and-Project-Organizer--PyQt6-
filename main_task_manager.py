@@ -195,6 +195,27 @@ class MainWindow(QMainWindow):
             old_proj.delete_act.triggered.connect(self.delete_project_page)
             self.ui.project_buttoncb.addItem(name)
             self.projects_list.append(old_proj)
+
+            # loading the groups of the project
+            g_query = QSqlQuery()
+            g_query.exec(f"SELECT group_id,group_name FROM task_groups WHERE project_id ={id}")
+            while g_query.next():
+                tasks = []
+                group_i = g_query.value(0)
+                group_n = g_query.value(1)
+                t_query = QSqlQuery()
+                t_query.exec(f"SELECT task_name,task_date,task_time FROM tasks WHERE group_id = "
+                             f"{group_i}")
+                while t_query.next():
+                    task = []
+                    t_name = t_query.value(0)
+                    t_date = t_query.value(1)
+                    t_time = t_query.value(2)
+                    task.append(t_name)
+                    task.append(t_date)
+                    task.append(t_time)
+                    tasks.append(task)
+                old_proj.main.load_group(group_n,tasks)
     def switch_project_page(self,index):
         self.changePage(1)
         self.ui.main_project_stackedWidget.setCurrentIndex(index)
@@ -216,7 +237,6 @@ class MainWindow(QMainWindow):
         g_query.prepare("INSERT INTO task_groups(project_id,group_name) VALUES(?,?)")
         t_query.prepare("INSERT INTO tasks(group_id,task_name,task_date,task_time) VALUES(?,?,?,?)")
         for project in self.projects_list:# project is a projectPageMain obj
-            print(f"current project {project.project_id} ")
             proj_id = project.project_id
             for group in project.main.task_groups_list:# group is dragWidget obj
                 self.group_count+=1

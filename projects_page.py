@@ -141,9 +141,9 @@ class ProjectPageTasks(QWidget):
     def load_group(self,group_name,task_list):
         old_group = DragWidget()
         old_group.task_group_label.setText(group_name)
-        old_group.load_item(task_list)
         self.main_widget_lay.addWidget(old_group)
         self.main_widget_lay.addSpacing(30)
+        old_group.load_item(task_list)
 
 
 class ProjectPageMain(QWidget):
