@@ -19,7 +19,6 @@ class MainWindow(QMainWindow):
     def initializeUI(self):
         self.createModel()
         self.setUpMainWindow()
-        self.group_count = 0
         self.show()
 
     def input_collectors(self):
@@ -40,9 +39,11 @@ class MainWindow(QMainWindow):
         needed_tables = {"tasks", "projects", "task_groups"}
         tables_not_found = needed_tables - set(self.database.tables())
         if tables_not_found:
-            # first time message and setting up the database tables
             QMessageBox.information(self, "WELCOME", "YAYY THANKS FOR TRYING OUT THE ORGANIZER",
                                     QMessageBox.StandardButton.Ok)
+            self.create_tables()
+            # first time message and setting up the database tables
+    def create_tables(self):
             task_query = QSqlQuery()
             task_query.exec("DROP TABLE tasks")
             task_query.exec("""CREATE TABLE tasks(
@@ -125,6 +126,11 @@ class MainWindow(QMainWindow):
         c_query.exec("SELECT COUNT (project_id) FROM projects")
         while (c_query.next()):
             self.projs_in_db = c_query.value(0)
+        c_g_query = QSqlQuery()
+        c_g_query.exec("SELECT COUNT (group_id) FROM task_groups")
+        while (c_g_query.next()):
+            self.group_count = c_g_query.value(0)
+        print(self.group_count)
 
     def setUpProjectsPage(self):
         main_page_widget = QWidget()
@@ -204,16 +210,19 @@ class MainWindow(QMainWindow):
                 group_i = g_query.value(0)
                 group_n = g_query.value(1)
                 t_query = QSqlQuery()
-                t_query.exec(f"SELECT task_name,task_date,task_time FROM tasks WHERE group_id = "
+                t_query.exec(f"SELECT task_name,task_date,task_time,task_status FROM tasks WHERE "
+                             f"group_id = "
                              f"{group_i}")
                 while t_query.next():
                     task = []
                     t_name = t_query.value(0)
                     t_date = t_query.value(1)
                     t_time = t_query.value(2)
+                    t_status = t_query.value(3)
                     task.append(t_name)
                     task.append(t_date)
                     task.append(t_time)
+                    task.append(t_status)
                     tasks.append(task)
                 old_proj.main.load_group(group_n,tasks)
     def switch_project_page(self,index):
@@ -224,10 +233,6 @@ class MainWindow(QMainWindow):
         widget_to_del = self.ui.main_project_stackedWidget.currentWidget()
         self.ui.main_project_stackedWidget.removeWidget(widget_to_del)
         self.ui.project_buttoncb.removeItem(to_del)
-
-
-
-
     def closeEvent(self, event):
         p_query = QSqlQuery()
         g_query = QSqlQuery()
@@ -235,10 +240,13 @@ class MainWindow(QMainWindow):
 
         p_query.prepare("INSERT INTO projects(project_name,project_due_date) VALUES(?,?)")
         g_query.prepare("INSERT INTO task_groups(project_id,group_name) VALUES(?,?)")
-        t_query.prepare("INSERT INTO tasks(group_id,task_name,task_date,task_time) VALUES(?,?,?,?)")
+        t_query.prepare("INSERT INTO tasks(group_id,task_name,task_date,task_time,task_status) VALUES(?,?,?,?,?)")
+        print("here")
         for project in self.projects_list:# project is a projectPageMain obj
             proj_id = project.project_id
+            print(f"here {proj_id}")
             for group in project.main.task_groups_list:# group is dragWidget obj
+                print(f"here {group.task_group_label.text()}")
                 self.group_count+=1
                 g_query.addBindValue(proj_id)
                 g_query.addBindValue(group.task_group_label.text())
@@ -248,6 +256,7 @@ class MainWindow(QMainWindow):
                     t_query.addBindValue(task.task_label.text())
                     t_query.addBindValue(task.date_label.text())
                     t_query.addBindValue(task.time_label.text())
+                    t_query.addBindValue(task.task_status)
                     t_query.exec()
 
 

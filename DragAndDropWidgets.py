@@ -94,6 +94,7 @@ class DragItem(QWidget):
         self.task_label = QLabel()
         self.date_label = QLabel()
         self.time_label = QLabel()
+        self.task_status = 0
         self.setFixedSize(320,100)
         self.setUpItem()
     def __str__(self):
@@ -140,12 +141,14 @@ class DragItem(QWidget):
     def mark_as_complete(self,passed):
         """ 1.changes the done_button icon lowers label opacity and adds strike through
         """
+
         font = QLabel.font(self)
         self.opacity_effect = QGraphicsOpacityEffect()
         opacity_2 =  QGraphicsOpacityEffect()
         opacity_3 =  QGraphicsOpacityEffect()
         opacity_4 = QGraphicsOpacityEffect()
         if passed == True:
+            self.task_status = 1
             self.opacity_effect = QGraphicsOpacityEffect()
             self.opacity_effect.setOpacity(0.3)
             opacity_2.setOpacity(0.3)
@@ -156,6 +159,7 @@ class DragItem(QWidget):
             self.done_button.setIconSize(QSize(15, 15))
             font.setStrikeOut(True)
         else:
+            self.task_status = 0
             font.setStrikeOut(False)
             self.opacity_effect.setOpacity(1)
             opacity_2.setOpacity(1)
@@ -172,6 +176,7 @@ class DragItem(QWidget):
         self.date_label.setGraphicsEffect(opacity_2)
         self.due_label.setGraphicsEffect(opacity_3)
         self.time_label.setGraphicsEffect(opacity_4)
+
 
 
     def set_data(self,task_data,date_data,time_data):
@@ -343,7 +348,11 @@ class DragWidget(QWidget):
             name = task_details[0]
             date = task_details[1]
             time = task_details[2]
+            status = task_details[3]
             old_item = DragItem()
             old_item.set_data(name,date,time)
+            if status == 1:
+                old_item.mark_as_complete(True)
+                print(f"task {name} was checked")
             self.add_item(old_item)
 
