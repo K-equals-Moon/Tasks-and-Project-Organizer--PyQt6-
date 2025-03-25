@@ -1,5 +1,6 @@
 Taskks and Project organizer using PyQt6 GUI and SQLLITE for data storage and retrival.
 Desired Features:
+
 ★Project and tasks statistics
 ★tasks display and status marking
 ★motivational avatar on home page 
