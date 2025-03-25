@@ -356,3 +356,4 @@ class DragWidget(QWidget):
                 print(f"task {name} was checked")
             self.add_item(old_item)
 
+
