@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
         self.ui.tasks_table_view.hideColumn(5)
         self.ui.tasks_table_view.setColumnWidth(1,100)
         self.ui.tasks_table_view.setColumnWidth(3,400)
-        # setting the delegate what is this idk yet
+        # setting the delegate
         tasks_delegate = QSqlRelationalDelegate()
         self.ui.tasks_table_view.setItemDelegate(tasks_delegate)
         # setting up the projects page
